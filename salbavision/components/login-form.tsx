@@ -62,6 +62,8 @@ export function LoginForm({
       toast.success("Login successful!");
       if (typeof window !== "undefined") {
         localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("userEmail", user.email ?? "");
+        localStorage.setItem("userRole", user.role ?? "");
       }
       window.location.replace("/dashboard/admin");
     } catch (error: unknown) {
