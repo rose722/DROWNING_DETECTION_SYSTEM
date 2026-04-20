@@ -16,7 +16,7 @@ frame_lock = threading.Lock()
 # ======================
 # RTSP SETTINGS
 # ======================
-RTSP_URL = "rtsp://awts11:12345678@192.180.100.30:554/stream1"
+RTSP_URL = "rtsp://awts11:12345678@192.168.1.16:554/stream1"
 
 # ======================
 # SUPABASE CONFIG

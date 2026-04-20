@@ -237,8 +237,7 @@ export default function SettingsPage() {
               </table>
             </div>
           )}
-          // ...existing code...
-            // Pool type presets (already present above, reused here)
+          
           {tab === "system" && (
             <div className="bg-white rounded-xl shadow p-8 mb-8 border border-slate-100">
               <form

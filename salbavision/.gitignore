@@ -20,6 +20,12 @@
 # production
 /build
 
+# python
+venv/
+.venv/
+__pycache__/
+*.pyc
+
 # misc
 .DS_Store
 *.pem
@@ -40,3 +46,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Added by ggshield
+.cache_ggshield

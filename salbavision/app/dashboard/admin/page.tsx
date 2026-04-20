@@ -1,8 +1,7 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
 import Chart from "chart.js/auto";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type DashboardStats = {
@@ -17,11 +16,6 @@ type TrendData = {
   values: number[];
 };
 
-type LastAlert = {
-  alert_time?: string;
-  status?: string;
-} | null;
-
 const defaultStats: DashboardStats = {
   activeCameras: 0,
   ongoingAlerts: 0,
@@ -31,172 +25,43 @@ const defaultStats: DashboardStats = {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
   const chartCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const chartRef = useRef<Chart | null>(null);
-
-  const [checking, setChecking] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [fullName, setFullName] = useState("Admin");
   const [stats, setStats] = useState<DashboardStats>(defaultStats);
   const [trend, setTrend] = useState<TrendData>({ labels: [], values: [] });
-  const [lastAlert, setLastAlert] = useState<LastAlert>(null);
-  const [totalCameras, setTotalCameras] = useState(0);
+  const [lastAlert, setLastAlert] = useState<{ alert_time: string; status: string } | null>(null);
+  const [totalCameras, setTotalCameras] = useState<number>(0);
 
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-    const userRole = localStorage.getItem("userRole");
-
-    if (!isLoggedIn || (userRole && userRole !== "admin")) {
-      window.location.replace("/auth/login");
-      return;
-    }
-
-    setChecking(false);
-  }, []);
-
-  // --- Real-time dashboard update logic ---
-  const loadDashboard = useCallback(async () => {
-    let isMounted = true;
+  // Fetch dashboard stats, trend, last alert, and total cameras from API route
+  const loadDashboard = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-
-      const userEmail = typeof window !== "undefined" ? localStorage.getItem("userEmail") : null;
-      if (userEmail) {
-        const { data: userRow, error: userError } = await supabase
-          .from("users")
-          .select("firstname, lastname")
-          .eq("email", userEmail)
-          .limit(1)
-          .maybeSingle();
-
-        if (userError) {
-          throw userError;
-        }
-
-        const name = `${userRow?.firstname ?? ""} ${userRow?.lastname ?? ""}`.trim();
-        if (name) {
-          setFullName(name);
-        }
-      }
-
-      const fetchCount = async (
-        table: string,
-        applyFilter?: (query: any) => any,
-      ) => {
-        let query = supabase.from(table).select("*", { head: true, count: "exact" });
-        if (applyFilter) {
-          query = applyFilter(query);
-        }
-        const { count, error: countError } = await query;
-        if (countError) {
-          throw countError;
-        }
-        return count ?? 0;
-      };
-
-      const now = new Date();
-      const todayStart = new Date(now);
-      todayStart.setHours(0, 0, 0, 0);
-      const tomorrowStart = new Date(todayStart);
-      tomorrowStart.setDate(tomorrowStart.getDate() + 1);
-
-      const activeCameras = await fetchCount("cameras", (q) => q.eq("is_active", true));
-      const ongoingAlerts = await fetchCount("alerts", (q) => q.eq("status", "ongoing"));
-      const detectionsToday = await fetchCount("alerts", (q) =>
-        q.gte("alert_time", todayStart.toISOString()).lt("alert_time", tomorrowStart.toISOString()),
-      );
-      const totalIncidents = await fetchCount("alerts");
-      const allCameras = await fetchCount("cameras");
-
-      const labels: string[] = [];
-      const values: number[] = [];
-
-      for (let i = 6; i >= 0; i -= 1) {
-        const dayStart = new Date();
-        dayStart.setHours(0, 0, 0, 0);
-        dayStart.setDate(dayStart.getDate() - i);
-
-        const dayEnd = new Date(dayStart);
-        dayEnd.setDate(dayEnd.getDate() + 1);
-
-        labels.push(
-          dayStart.toLocaleDateString("en-US", {
-            month: "short",
-            day: "2-digit",
-          }),
-        );
-
-        const dayCount = await fetchCount("alerts", (q) =>
-          q.gte("alert_time", dayStart.toISOString()).lt("alert_time", dayEnd.toISOString()),
-        );
-        values.push(dayCount);
-      }
-
-      const { data: alertRow, error: alertError } = await supabase
-        .from("alerts")
-        .select("alert_time, status")
-        .order("alert_time", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (alertError) {
-        throw alertError;
-      }
-
-      if (!isMounted) {
-        return;
-      }
-
+      const res = await fetch("/api/dashboard-stats");
+      const data = await res.json();
       setStats({
-        activeCameras,
-        ongoingAlerts,
-        detectionsToday,
-        totalIncidents,
+        activeCameras: data.activeCameras,
+        ongoingAlerts: data.ongoingAlerts,
+        detectionsToday: data.detectionsToday,
+        totalIncidents: data.totalIncidents,
       });
-      setTotalCameras(allCameras);
-      setTrend({ labels, values });
-      setLastAlert(alertRow);
-    } catch (loadError: any) {
-      setError(loadError?.message ?? "Failed to load dashboard data.");
+      setTrend(data.graphData);
+      setLastAlert(data.lastAlert ?? null);
+      setTotalCameras(data.totalCameras ?? 0);
+    } catch (e) {
+      setError("Failed to load dashboard data.");
     } finally {
       setLoading(false);
     }
-    return () => {
-      isMounted = false;
-    };
-  }, [supabase]);
+  };
 
   useEffect(() => {
-    if (checking) return;
     loadDashboard();
-  }, [checking, loadDashboard]);
+  }, []);
 
-  // Real-time subscription for alerts and cameras
-  useEffect(() => {
-    if (checking) return;
-    // Subscribe to alerts and cameras changes
-    const alertsSub = supabase.channel('alerts-db-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'alerts' }, () => {
-        loadDashboard();
-      })
-      .subscribe();
-    const camerasSub = supabase.channel('cameras-db-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'cameras' }, () => {
-        loadDashboard();
-      })
-      .subscribe();
-    return () => {
-      supabase.removeChannel(alertsSub);
-      supabase.removeChannel(camerasSub);
-    };
-  }, [checking, supabase, loadDashboard]);
+
 
   useEffect(() => {
     if (!chartCanvasRef.current || trend.labels.length === 0) {
@@ -237,6 +102,7 @@ export default function AdminDashboard() {
     };
   }, [trend]);
 
+
   const handleLogout = () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("isLoggedIn");
@@ -246,12 +112,11 @@ export default function AdminDashboard() {
     router.replace("/auth/login");
   };
 
-  if (checking) {
-    return <div className="flex min-h-screen items-center justify-center">Checking session...</div>;
-  }
+
 
   return (
     <div className="min-h-screen bg-[#eef3ff] text-slate-900">
+      {/* Sidebar */}
       <div className="fixed left-0 top-0 flex h-screen w-[270px] flex-col bg-[#0a1f44] px-5 py-7 text-white shadow-[4px_0_20px_rgba(0,0,0,0.25)]">
         <div className="mb-9 text-center">
           <img src="/images/Salbavision.png" alt="SALBAVISION Logo" className="mx-auto mb-2 w-[110px]" />
@@ -264,13 +129,26 @@ export default function AdminDashboard() {
         <button type="button" onClick={handleLogout} className="mt-auto rounded-[10px] border border-white/20 px-4 py-3 text-left text-[#c8d6ff] transition hover:bg-white/10 hover:text-white"><i className="fas fa-sign-out-alt mr-2" /> Logout</button>
       </div>
 
+      {/* Main Content */}
       <div className="ml-[270px] p-6">
         <div className="mb-6 flex items-center justify-between rounded-[14px] bg-white px-6 py-5 shadow-[0_4px_14px_rgba(0,0,0,0.08)]">
           <div>
             <h4 className="m-0 text-2xl font-semibold">Drowning Detection Dashboard</h4>
             <small className="text-slate-500">System Overview and Status</small>
           </div>
-          <div className="font-semibold">{fullName}</div>
+        </div>
+
+        {/* Global Refresh Button */}
+        <div className="mb-5 flex items-center gap-3">
+          <button
+            onClick={loadDashboard}
+            className="rounded bg-[#0b63ff] px-4 py-2 text-white hover:bg-[#084bb5] disabled:opacity-60"
+            disabled={loading}
+            title="Refresh all dashboard data"
+          >
+            {loading ? "Refreshing..." : "Refresh Dashboard"}
+          </button>
+          {loading && <span className="text-[#0b63ff] text-sm">Loading data...</span>}
         </div>
 
         {error && (
@@ -279,6 +157,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* Stats Cards */}
         <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5">
           <StatCard label="Active Cameras" value={stats.activeCameras} loading={loading} />
           <StatCard label="Ongoing Alerts" value={stats.ongoingAlerts} loading={loading} />
@@ -286,13 +165,12 @@ export default function AdminDashboard() {
           <StatCard label="Total Incidents" value={stats.totalIncidents} loading={loading} />
         </div>
 
+        {/* Detection Trend Graph */}
         <div className="mt-9 flex justify-center">
-          <div className="w-[85%] rounded-[18px] bg-white p-6 shadow-[0_6px_20px_rgba(0,0,0,0.06)]">
-            <h6 className="mb-4 text-sm font-bold text-[#1d2d50]">Detection Trend (Last 7 Days)</h6>
-            <canvas ref={chartCanvasRef} height={180} />
-          </div>
+          <DashboardTrendGraph chartCanvasRef={chartCanvasRef} trend={trend} loading={loading} />
         </div>
 
+        {/* Info Cards */}
         <div className="mt-6 grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-5">
           <div className="rounded-[14px] bg-white p-6 shadow-[0_4px_16px_rgba(0,0,0,0.05)]">
             <h6 className="mb-3 text-sm font-bold text-[#1d2d50]">Last Alert</h6>
@@ -309,25 +187,10 @@ export default function AdminDashboard() {
                 View Logs
               </a>
               <button
-                onClick={async () => {
-                  setLoading(true);
-                  try {
-                    const { data: alertRow, error: alertError } = await supabase
-                      .from("alerts")
-                      .select("alert_time, status")
-                      .order("alert_time", { ascending: false })
-                      .limit(1)
-                      .maybeSingle();
-                    if (alertError) throw alertError;
-                    setLastAlert(alertRow);
-                  } catch (e) {
-                    setError("Failed to refresh last alert.");
-                  } finally {
-                    setLoading(false);
-                  }
-                }}
+                onClick={loadDashboard}
                 className="inline-block rounded border border-[#0b63ff] px-3 py-2 text-xs text-[#0b63ff] hover:bg-[#eaf1ff]"
                 title="Refresh Last Alert"
+                disabled={loading}
               >
                 Refresh
               </button>
@@ -354,6 +217,19 @@ export default function AdminDashboard() {
       </div>
     </div>
   );
+// Modularized graph component for future extensibility
+function DashboardTrendGraph({ chartCanvasRef, trend, loading }: { chartCanvasRef: React.RefObject<HTMLCanvasElement | null>, trend: TrendData, loading: boolean }) {
+  return (
+    <div className="w-[85%] rounded-[18px] bg-white p-6 shadow-[0_6px_20px_rgba(0,0,0,0.06)] min-h-[240px] flex flex-col items-center justify-center">
+      <h6 className="mb-4 text-sm font-bold text-[#1d2d50]">Detection Trend (Last 7 Days)</h6>
+      {loading ? (
+        <div className="text-[#0b63ff] text-center py-8">Loading chart...</div>
+      ) : (
+        <canvas ref={chartCanvasRef} height={180} />
+      )}
+    </div>
+  );
+}
 }
 
 function StatCard({

@@ -1,109 +1,235 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# Salbavision — AI-Powered Drowning Detection System
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+A full-stack drowning detection platform combining a **Next.js web dashboard** with **Python AI detection scripts** that stream live annotated video, trigger siren alerts, and log incidents to Supabase.
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+---
 
-## Features
+## System Overview
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+```
+┌─────────────────────────────────────────────────────────┐
+│                    SALBAVISION                          │
+│                                                         │
+│  ┌──────────────┐    ┌──────────────────────────────┐  │
+│  │  IP Camera   │───▶│  Python Detection Script     │  │
+│  │  (RTSP)      │    │  stream_bridge.py (YOLO)     │  │
+│  └──────────────┘    │  rf_stream_bridge.py (RF)    │  │
+│                      │  drowning.py (standalone)    │  │
+│                      └──────────┬───────────────────┘  │
+│                                 │                       │
+│              ┌──────────────────┼──────────────────┐   │
+│              ▼                  ▼                   ▼   │
+│       MJPEG Stream         Siren Audio         Supabase │
+│    localhost:5001/         (siren.mp3)         (alerts  │
+│      video_feed                                 table)  │
+│              │                                   │      │
+│              └──────────────────┬────────────────┘      │
+│                                 ▼                       │
+│              ┌──────────────────────────────────────┐   │
+│              │     Next.js Dashboard (port 3000)    │   │
+│              │  /dashboard/admin/detection          │   │
+│              │  /dashboard/admin/logs               │   │
+│              │  /dashboard/admin/settings           │   │
+│              └──────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────┘
+```
 
-## Demo
+---
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+## Project Structure
 
-## Deploy to Vercel
+```
+salbavision/
+├── app/                        # Next.js App Router
+│   ├── auth/                   # Auth pages (login, sign-up, etc.)
+│   │   ├── login/
+│   │   ├── sign-up/
+│   │   ├── forgot-password/
+│   │   └── ...
+│   ├── dashboard/
+│   │   └── admin/
+│   │       ├── detection/      # Live video feed page
+│   │       ├── logs/           # Incident history
+│   │       └── settings/       # Camera & system settings
+│   └── api/                    # Next.js API routes
+│       ├── reset-password/
+│       ├── send-otp/
+│       └── verify-otp/
+├── components/                 # Shared React components
+├── lib/                        # Supabase client, utilities
+│
+├── stream_bridge.py            # YOLO-based detection + Flask stream
+├── rf_stream_bridge.py         # Roboflow-based detection + Flask stream
+├── drowning.py                 # Standalone viewer (no Flask/Supabase)
+│
+├── best.pt                     # YOLO model weights
+├── siren.mp3                   # Alert audio
+├── requirements.txt            # Python dependencies
+├── proxy.ts                    # Next.js middleware
+├── package.json
+└── README.md
+```
 
-Vercel deployment will guide you through creating a Supabase account and project.
+---
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+## Prerequisites
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+### Node.js (Dashboard)
+- Node.js 18+
+- npm
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+### Python (Detection Scripts)
+- Python 3.9+
+- See `requirements.txt`
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+---
 
-## Clone and run locally
+## Setup
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+### 1. Environment Variables
 
-2. Create a Next.js app using the Supabase Starter template npx command
+Create a `.env.local` file in the project root:
 
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
+```
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
+Both values are in your [Supabase project API settings](https://supabase.com/dashboard/project/_?showConnect=true).
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
+### 2. Install Node Dependencies
 
-3. Use `cd` to change into the app's directory
+```bash
+npm install
+```
 
-   ```bash
-   cd with-supabase-app
-   ```
+### 3. Set Up Python Virtual Environment
 
-4. Rename `.env.example` to `.env.local` and update the following:
+It is recommended to use a virtual environment to keep Python dependencies isolated.
+Full guide: [README-venv.md](README-venv.md)
 
-  ```env
-  NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
-  ```
-  > [!NOTE]
-  > This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-  > Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-  > See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
+```bash
+python -m venv venv
 
-  Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+# Windows (Command Prompt)
+.\venv\Scripts\activate.bat
 
-5. You can now run the Next.js local development server:
+# Windows (PowerShell)
+.\venv\Scripts\Activate.ps1
 
-   ```bash
-   npm run dev
-   ```
+# Windows (Git Bash) / macOS / Linux
+source venv/Scripts/activate
+```
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+Then install dependencies:
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+```bash
+pip install -r requirements.txt
+```
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+For GPU acceleration (NVIDIA CUDA):
 
-## Feedback and issues
+```bash
+pip install inference-gpu opencv-python pillow flask supabase pygame
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
+```
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+---
 
-## More Supabase examples
+## Running the System
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+### Start the Next.js Dashboard
+
+```bash
+npm run dev
+```
+
+Dashboard available at `http://localhost:3000`
+
+### Start a Detection Script
+
+Pick one depending on your model:
+
+| Script | Model | Use Case |
+|---|---|---|
+| `stream_bridge.py` | YOLO (`best.pt`) | Local model, no API key needed |
+| `rf_stream_bridge.py` | Roboflow cloud | Cloud inference, easy model swap |
+| `drowning.py` | Roboflow cloud | Standalone viewer, no dashboard |
+
+```bash
+# YOLO stream (default)
+python stream_bridge.py
+
+# Roboflow stream (integrates with dashboard)
+python rf_stream_bridge.py
+
+# Standalone viewer only
+py drowning.py
+```
+
+Live stream available at `http://localhost:5001/video_feed`
+
+---
+
+## Detection Scripts
+
+### `stream_bridge.py`
+YOLO-based detection using a local `best.pt` model. Reads an RTSP camera, runs inference, serves an MJPEG stream via Flask, and logs drowning alerts to Supabase.
+
+### `rf_stream_bridge.py`
+Roboflow InferencePipeline version of `stream_bridge.py`. Same Flask/Supabase/siren integration, same suppression and alarm logic — just swaps local YOLO for Roboflow's hosted model.
+Full docs: [README-rf_stream_bridge.md](README-rf_stream_bridge.md)
+
+### `drowning.py`
+Lightweight standalone script. Opens a local annotated window — no Flask, no Supabase, no siren. Use it for quick testing or offline demos.
+Full docs: [README-drowning.md](README-drowning.md)
+
+---
+
+## Supabase Tables
+
+| Table | Used by | Purpose |
+|---|---|---|
+| `alerts` | `stream_bridge.py`, `rf_stream_bridge.py` | Drowning alert records |
+| `cameras` | `stream_bridge.py`, `rf_stream_bridge.py` | Camera registration |
+
+---
+
+## Dashboard Pages
+
+| Route | Description |
+|---|---|
+| `/auth/login` | Admin login |
+| `/dashboard/admin/detection` | Live camera feed with detection overlay |
+| `/dashboard/admin/logs` | Incident and alert history |
+| `/dashboard/admin/settings` | Camera and system configuration |
+
+---
+
+## Key Configuration
+
+Settings are at the top of each Python script:
+
+| Setting | Default | Description |
+|---|---|---|
+| `VIDEO_SOURCE` | RTSP URL | Camera or video file input |
+| `RF_API_KEY` | — | Roboflow API key (`rf_stream_bridge.py`, `drowning.py`) |
+| `RF_MODEL_ID` | — | Roboflow model ID |
+| `DROWN_ALERT_THRESHOLD` | `0.50` | Minimum confidence to trigger alarm |
+| `DOMINANCE_MARGIN` | `0.21` | How much drowning must exceed other classes |
+| `ALARM_HOLD` | `5s` | How long alarm stays active after last detection |
+| `ALERT_COOLDOWN` | `10s` | Minimum time between repeated alerts |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Dashboard | Next.js 16, React 19, Tailwind CSS, shadcn/ui |
+| Auth | Supabase Auth |
+| Database | Supabase (PostgreSQL) |
+| Detection (YOLO) | Ultralytics YOLO, OpenCV |
+| Detection (RF) | Roboflow Inference, OpenCV, PIL |
+| Stream server | Flask (MJPEG) |
+| Audio | pygame |

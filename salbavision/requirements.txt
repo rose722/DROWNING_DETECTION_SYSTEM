@@ -1,0 +1,35 @@
+# =============================================================================
+# Python dependencies for Salbavision detection scripts
+# =============================================================================
+#
+# Install (CPU):
+#   pip install -r requirements.txt
+#
+# Install (GPU — NVIDIA CUDA):
+#   pip install inference-gpu opencv-python pillow flask supabase pygame
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+#
+# =============================================================================
+
+# --- Roboflow inference (CPU) ---
+# Switch to inference-gpu for NVIDIA GPU acceleration
+inference
+
+# --- Computer vision ---
+opencv-python
+pillow
+numpy
+
+# --- Web server (stream_bridge / rf_stream_bridge) ---
+flask
+
+# --- Database (stream_bridge / rf_stream_bridge) ---
+supabase
+
+# --- Audio alert ---
+pygame
+
+# --- Optional: GPU support ---
+# Uncomment and install manually if using GPU:
+# torch
+# torchvision

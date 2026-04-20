@@ -82,70 +82,68 @@ export function SignUpForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Create Your Account</CardTitle>
-          <CardDescription>Register to access the Drowning Detection System</CardDescription>
+    <div className={cn("flex flex-col items-center justify-center min-h-screen", className)} {...props}>
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="flex flex-col items-center">
+          <CardTitle className="text-2xl text-center">Create Your Account</CardTitle>
+          <CardDescription className="text-center">Register to access the Drowning Detection System</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSignUp}>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="firstname">First Name</Label>
-                <Input
-                  id="firstname"
-                  type="text"
-                  placeholder="Juan"
-                  required
-                  value={firstname}
-                  onChange={(e) => setFirstname(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="lastname">Last Name</Label>
-                <Input
-                  id="lastname"
-                  type="text"
-                  placeholder="Dela Cruz"
-                  required
-                  value={lastname}
-                  onChange={(e) => setLastname(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating an account..." : "Sign up"}
-              </Button>
+          <form onSubmit={handleSignUp} className="space-y-5">
+            <div>
+              <Label htmlFor="firstname">First Name</Label>
+              <Input
+                id="firstname"
+                type="text"
+                placeholder="Juan"
+                required
+                value={firstname}
+                onChange={(e) => setFirstname(e.target.value)}
+                className="mt-1"
+              />
             </div>
-            <div className="mt-4 text-center text-sm">
-              Already have an account?{" "}
-              <Link href="/auth/login" className="underline-offset-4 hover:underline">
-                Login
-              </Link>
+            <div>
+              <Label htmlFor="lastname">Last Name</Label>
+              <Input
+                id="lastname"
+                type="text"
+                placeholder="Dela Cruz"
+                required
+                value={lastname}
+                onChange={(e) => setLastname(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            {error && <div className="text-sm text-center text-red-500">{error}</div>}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Creating an account..." : "Sign up"}
+            </Button>
+            <div className="text-center text-sm mt-2">
+              Already have an account?{' '}
+              <Link href="/auth/login" className="text-blue-700 hover:underline">Login</Link>
             </div>
           </form>
         </CardContent>

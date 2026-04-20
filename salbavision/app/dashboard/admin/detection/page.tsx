@@ -10,7 +10,6 @@ export default function RealTimeDetectionPage() {
   const [checking, setChecking] = useState(true);
   const [fullName, setFullName] = useState("User");
   const [alertActive, setAlertActive] = useState(false);
-  const [imgTs, setImgTs] = useState(0);
   const alertSoundRef = useRef<HTMLAudioElement>(null);
 
   // Session/role check
@@ -74,13 +73,6 @@ export default function RealTimeDetectionPage() {
     };
   }, [checking, alertActive]);
 
-  // Set initial timestamp after mount, then refresh camera image every 2s
-  useEffect(() => {
-    if (checking) return;
-    setImgTs(Date.now());
-    const interval = setInterval(() => setImgTs(Date.now()), 2000);
-    return () => clearInterval(interval);
-  }, [checking]);
 
   if (checking) {
     return <div className="flex min-h-screen items-center justify-center">Checking session...</div>;
@@ -107,7 +99,7 @@ export default function RealTimeDetectionPage() {
         <div className="camera-card w-full rounded-[16px] bg-white p-6 shadow-[0_5px_15px_rgba(0,0,0,0.08)]">
           <div className="camera-video">
             <h5 className="mb-3 text-lg font-semibold">Camera 1 – Main Pool</h5>
-            <img src={`http://localhost:5001/video_feed?ts=${imgTs}`} alt="Camera Feed" className="h-[680px] w-full rounded-[14px] object-cover bg-black" />
+            <img src="http://localhost:5001/video_feed" alt="Camera Feed" className="h-[680px] w-full rounded-[14px] object-cover bg-black" />
           </div>
         </div>
         {/* Alert Banner */}
