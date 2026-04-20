@@ -37,7 +37,8 @@ RF_MODEL_ID = "aqw3rfaq3wcqrq2r/12" # splashsafe yolov11 accurate
 # RF_MODEL_ID = "iy-htoyq3tayectyk/5" # freelance rf-detr small
 
 # VIDEO_SOURCE = r"C:\dev\freelance_systems\salbavision\videos\IMG_1205.MOV"
-VIDEO_SOURCE = r"C:\Users\jessicahd\Documents\GitHub\DROWNING_DETECTION_SYSTEM\salbavision-v2\videos\IMG_1205.MOV"
+VIDEO_SOURCE = "rtsp://admin23:admin123@192.180.100.30:554/stream1"
+# VIDEO_SOURCE = r"C:\Users\jessicahd\Documents\GitHub\DROWNING_DETECTION_SYSTEM\salbavision-v2\videos\IMG_1205.MOV"
 
 MAX_FPS = 60
 

@@ -43,7 +43,7 @@ RF_MODEL_ID = "aqw3rfaq3wcqrq2r/12" # splashsafe yolov11 accurate
 # RF_MODEL_ID = "aqw3rfaq3wcqrq2r-d778t/1" #akwatek rf-detr small
 # RF_MODEL_ID = "iy-htoyq3tayectyk/5" # freelance rf-detr small
 
-VIDEO_SOURCE = r"C:\dev\freelance_systems\salbavision\videos\IMG_1205.MOV"
+VIDEO_SOURCE = "rtsp://admin23:admin123@192.180.100.30:554/stream1"
 
 # --- Supabase ---
 SUPABASE_URL = "https://yzohitznmgtzdkzyoztf.supabase.co"
