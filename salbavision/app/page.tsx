@@ -65,7 +65,7 @@ export default function Home() {
 
         <section className="mt-10 grid gap-6 lg:mt-16 lg:grid-cols-[1.2fr_0.8fr] lg:gap-8">
           <article className="landing-card reveal-up" style={{ animationDelay: "0.1s" }}>
-            <p className="landing-chip">Research-Based Capstone System</p>
+            <p className="landing-chip">Research-Based Artificial Intelligent System</p>
             <h1 className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-4xl lg:text-5xl">
               Smart Surveillance Drowning Detection and Alert System for Faster Lifesaving Response
             </h1>

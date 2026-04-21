@@ -35,19 +35,19 @@ from supabase import create_client, Client
 # CONFIG
 # =============================================================================
 
-RF_API_KEY  = "yYf0oFRqVThzJtqnC6D4"
+RF_API_KEY  = os.getenv("RF_API_KEY", "")
 
 # RF_MODEL_ID = "aqw3rfaq3wcqrq2r/9" # splashsafe yolov11 accurate
-RF_MODEL_ID = "aqw3rfaq3wcqrq2r/12" # splashsafe yolov11 accurate
+RF_MODEL_ID = os.getenv("RF_MODEL_ID", "aqw3rfaq3wcqrq2r/12")  # splashsafe yolov11 accurate
 # RF_MODEL_ID = "aqw3rfaq3wcqrq2r-d778t/4" #akwatek yolov11 accurate
 # RF_MODEL_ID = "aqw3rfaq3wcqrq2r-d778t/1" #akwatek rf-detr small
 # RF_MODEL_ID = "iy-htoyq3tayectyk/5" # freelance rf-detr small
 
-VIDEO_SOURCE = "rtsp://admin23:admin123@192.180.100.30:554/stream2"
+VIDEO_SOURCE = os.getenv("VIDEO_SOURCE", 0)  # RTSP URL or 0 for webcam
 
 # --- Supabase ---
-SUPABASE_URL = "https://yzohitznmgtzdkzyoztf.supabase.co"
-SUPABASE_KEY = "sb_secret_Q8_z2vsv5-x-KxSk25AJjQ_ONbMzgKF"
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
 
 # --- Audio ---
 AUDIO_ENABLED = True
